@@ -20,7 +20,7 @@ npx wrangler deploy          # reads wrangler.jsonc, uploads dist/
 
 That produces `https://<worker-name>.<your-subdomain>.workers.dev`.
 
-### Two real pitfalls found in testing
+### Three real pitfalls found in testing
 
 1. **Rename the Worker first.** `wrangler.jsonc` `name` becomes the deploy
    target. If that name already exists in your account, you will overwrite it.
@@ -28,7 +28,22 @@ That produces `https://<worker-name>.<your-subdomain>.workers.dev`.
 2. **Do not run wrangler from a scratch/temp directory on Windows.** It can fail
    with `A permission error occurred while accessing the file system` on
    `C:\Users\<you>\Application Data`. Run it from a normal project directory
-   (e.g. `D:\Projects\...`).
+   (e.g. `D:\Projects\...`). Same applies to `npm install` there.
+3. **A fresh deploy can 404 for ~20–30 seconds.** Paths that exist in `dist/`
+   may return 404 immediately after the upload completes, then resolve. This is
+   edge propagation, not a missing asset — re-check before debugging. New
+   Workers on a fresh account were affected; already-served Workers were not.
+
+### Production and previews are separate Workers
+
+`main` deploys to `$WORKER_NAME`; every other branch and PR deploys to
+`$WORKER_NAME-preview`. **Verified by deploying the same build to both**: the
+preview Worker came up on its own hostname while the production Worker kept
+serving its existing content unchanged.
+
+This matters because a Worker has exactly one live version. Deploying a preview
+branch into the production Worker would replace the live site — keeping two
+Workers makes that impossible rather than merely unlikely.
 
 ---
 

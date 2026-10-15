@@ -148,8 +148,13 @@ wrangler.jsonc            Cloudflare Workers static-asset config
 
 `docs/example-northbay.md` walks through a complete build for a **fictional**
 company (Northbay Marine Hardware, stainless steel marine hardware) — the
-questions asked, the facts filled, the pages produced, and the checks run. No
-real customer data is used anywhere in this repository.
+questions asked, the facts filled, the pages produced, and the checks run.
+
+`docs/example-verdant.md` is a second run on a different fictional business
+(dried botanicals), which documents the three real defects the gates caught, the
+email-only inquiry path, and the production/preview isolation test.
+
+No real customer data is used anywhere in this repository.
 
 ---
 
