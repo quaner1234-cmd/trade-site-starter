@@ -170,8 +170,6 @@ for (const page of pages) {
   const html = readFileSync(page, 'utf8');
   const text = html.toLowerCase();
 
-  if (text.includes('sk-not-verified')) continue; // opt-out marker, see README
-
   for (const bad of bannedClaims) {
     if (text.includes(bad)) problems.push(`BANNED CLAIM "${bad}": ${rel(page)}`);
   }
@@ -195,8 +193,11 @@ for (const page of pages) {
 
 // ---------------------------------------------------------------------------
 // 6. Inquiry path. A site that cannot receive an inquiry is not finished.
-//    Either a form endpoint or a contact email must be present in the built
-//    output, and the contact page must exist.
+//
+//    RULE (single, shared by verify.mjs, intake.mjs and site.ts):
+//    an inquiry channel exists when a contact email OR a form endpoint is set.
+//    Email alone is sufficient — the form falls back to mailto:. Formspree is
+//    recommended but not required. All three places must use the same rule.
 // ---------------------------------------------------------------------------
 if (!internalPaths.has('/contact/')) problems.push('MISSING ROUTE: /contact/');
 
@@ -207,8 +208,14 @@ const hasEndpoint = /data-endpoint="https?:\/\//.test(contactHtml);
 const hasEmail = /data-email="[^"]+@[^"]+"/.test(contactHtml);
 if (!hasEndpoint && !hasEmail) {
   problems.push(
-    'NO INQUIRY PATH: set SITE.rfqEndpoint (Formspree) or SITE.email in src/config/site.ts. ' +
-      'Publishing without one means inquiries are silently lost.',
+    'NO INQUIRY PATH: set SITE.email or SITE.rfqEndpoint in src/config/site.ts. ' +
+      'Either one is enough — publishing with neither means inquiries are silently lost.',
+  );
+} else if (!hasEndpoint && hasEmail) {
+  // Not a failure: mailto works. Recorded so the tradeoff stays visible.
+  console.log(
+    'note: inquiry channel is email-only (mailto fallback). A Formspree endpoint ' +
+      'is more reliable — see DEPLOY.md §6.',
   );
 }
 if (contactHtml) {

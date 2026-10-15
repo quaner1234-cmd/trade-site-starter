@@ -70,10 +70,12 @@ const listFilled = (key) => {
 
 const required = [
   ['name', 'English company name buyers will see'],
-  ['email', 'public inbox for inquiries'],
+  // Email OR endpoint satisfies the inquiry channel — see the shared rule in
+  // src/config/site.ts (hasInquiryChannel). Each is listed separately so the
+  // report can say which one is present, but only "neither" is blocking.
+  ['email', 'public inbox for inquiries (enough on its own)'],
   ['category', 'what you sell, in the buyer’s own words'],
   ['country', 'ISO country code, e.g. CN'],
-  ['rfqEndpoint', 'Formspree endpoint (https://formspree.io)'],
 ];
 const optional = [
   ['legalName', 'registered legal name'],
@@ -91,6 +93,20 @@ for (const [key, label] of required) {
   console.log(`  ${ok ? '[x]' : '[ ]'} ${key.padEnd(14)} ${label}`);
 }
 
+// Inquiry channel: email OR endpoint. Only "neither" blocks. This mirrors
+// hasInquiryChannel() in src/config/site.ts and the check in verify.mjs.
+const hasEmail = Boolean(filled('email'));
+const hasEndpoint = Boolean(filled('rfqEndpoint'));
+console.log(
+  `  ${hasEmail || hasEndpoint ? '[x]' : '[ ]'} ${'inquiry'.padEnd(14)} ` +
+    (hasEmail
+      ? 'channel: email (mailto fallback)'
+      : hasEndpoint
+        ? 'channel: form endpoint'
+        : 'channel: NONE — set email or rfqEndpoint'),
+);
+if (!hasEmail && !hasEndpoint) blockers++;
+
 console.log('\nOptional (hidden when empty — the site still works):');
 for (const [key, label] of optional) {
   console.log(`  ${filled(key) ? '[x]' : '[ ]'} ${key.padEnd(20)} ${label}`);
@@ -103,17 +119,16 @@ console.log(`Markets configured:     ${listFilled('markets').join(', ') || '(non
 console.log('\nAsk the user only about what blocks publishing:');
 const questions = [];
 if (!filled('name')) questions.push('What is the English company name buyers should see?');
-if (!filled('email'))
-  questions.push('Which email address should receive inquiries? (must be one you actually read)');
 if (!filled('category'))
   questions.push('In one line, what do you sell — using the words your buyers use?');
 if (!filled('country')) questions.push('Which country is the company registered in?');
-if (!filled('rfqEndpoint'))
-  questions.push(
-    'Create a free Formspree form and give me its endpoint URL — or confirm I should use email-only for now.',
-  );
 if (!listFilled('buyers').length)
   questions.push('Who buys from you — distributors, contractors, brand owners, factories?');
+if (!hasEmail && !hasEndpoint)
+  questions.push(
+    'Which email should receive inquiries? (A Formspree endpoint is more reliable, ' +
+      'but email alone is enough to publish — see DEPLOY.md §6.)',
+  );
 
 if (questions.length === 0) {
   console.log('  Nothing blocking. Run `npm run check`.');

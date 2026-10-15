@@ -48,18 +48,21 @@ export const SITE = {
   tagline: '',
 } as const;
 
-/** True only when the minimum facts needed to publish are present. */
+/**
+ * True when the minimum facts needed to publish are present.
+ *
+ * An inquiry channel exists when a contact email OR a form endpoint is set —
+ * email alone is sufficient, because the form falls back to mailto:. This rule
+ * is shared by scripts/verify.mjs and scripts/intake.mjs; changing it here
+ * without changing them produces contradictory advice.
+ */
 export function publishReady(): boolean {
   return Boolean(SITE.name && SITE.email);
 }
 
-/** Missing facts that block publishing. Used by scripts/verify.mjs. */
-export function missingEssentials(): string[] {
-  const missing: string[] = [];
-  if (!SITE.name) missing.push('SITE.name');
-  if (!SITE.email) missing.push('SITE.email');
-  if (!SITE.rfqEndpoint && !SITE.email) missing.push('SITE.rfqEndpoint');
-  return missing;
+/** True when at least one inquiry channel is configured. */
+export function hasInquiryChannel(): boolean {
+  return Boolean(SITE.email || SITE.rfqEndpoint);
 }
 
 export type SiteConfig = typeof SITE;

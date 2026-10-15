@@ -79,8 +79,9 @@ acceptable, because it loses the buyer the moment they check.
 npm install
 npm run dev        # local preview at http://localhost:4321
 npm run build      # build to dist/
-npm run verify     # the check gate — must pass with zero problems
-npm run check      # build + verify
+npm run verify     # facts + technical SEO + links + inquiry path
+npm run seo        # SEO/GEO rule check (skills/seo-geo/SKILL.md)
+npm run check      # build + verify + seo
 npm run intake     # report what material and facts are still missing
 ```
 
@@ -91,10 +92,17 @@ npm run intake     # report what material and facts are still missing
 - images without `alt`
 - banned fabricated claims
 - template placeholder text leaking into a published page
-- **no working inquiry path** (no form endpoint and no email)
+- **no working inquiry path** (neither email nor form endpoint)
 
-If it fires, the fix is to remove the claim or add the real fact — never to
-relax the check.
+`npm run seo` enforces the SEO/GEO rules from `skills/seo-geo/SKILL.md`:
+it rejects `llms.txt`, deprecated FAQPage schema and other AI-specific markup
+Google ignores; flags near-duplicate pages (the scaled-content pattern); flags
+thin content; and flags GEO overclaims such as promising a visibility
+percentage.
+
+If either fires, the fix is to remove the claim or add the real fact — never to
+relax the check. **A starter with no company information is *supposed* to fail
+these gates.** That is the point: an empty template must not be publishable.
 
 ---
 
@@ -127,8 +135,10 @@ src/data/knowledge.ts     buyer-guides: one question, one URL, with sources
 src/layouts/Base.astro    <head> SEO/OG/JSON-LD, header, footer
 src/components/           InquiryForm, SpecTable, CtaBand
 src/pages/                home, products, guides, about, contact
-scripts/verify.mjs        the check gate (runs in CI)
+scripts/verify.mjs        fact + technical SEO + link gate (runs in CI)
+scripts/seo-check.mjs     SEO/GEO rule gate (runs in CI)
 scripts/intake.mjs        material + missing-facts report
+skills/seo-geo/SKILL.md   SEO/GEO rules: Google official + research evidence
 wrangler.jsonc            Cloudflare Workers static-asset config
 ```
 
@@ -140,6 +150,27 @@ wrangler.jsonc            Cloudflare Workers static-asset config
 company (Northbay Marine Hardware, stainless steel marine hardware) — the
 questions asked, the facts filled, the pages produced, and the checks run. No
 real customer data is used anywhere in this repository.
+
+---
+
+## SEO / GEO rules
+
+`skills/seo-geo/SKILL.md` is the rule set the Agent must apply when writing or
+reviewing any page, and `npm run seo` enforces its mechanical half in CI.
+
+It keeps two things separate, because conflating them is how bad advice spreads:
+
+- **Rules** from Google Search Central — what is unnecessary or violates policy.
+  Google states there is no separate "GEO": optimizing for AI features *is* SEO.
+  Explicitly unnecessary: `llms.txt`, chunking, AI-specific schema, a page per
+  query variation (scaled content abuse), inauthentic mentions.
+- **Research evidence** from the KDD 2024 GEO paper and the 2026 critical
+  survey — reported with conditions. The famous "up to 40%" figure measured
+  already-retrieved documents, **not** organic discovery; no reviewed technique
+  shows a durable cross-platform effect on discoverability.
+
+Full sources and scope limits are in the skill. **The fact boundary outranks
+every optimisation**: no tactic justifies inventing a statistic.
 
 ---
 
