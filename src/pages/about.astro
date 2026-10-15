@@ -1,0 +1,95 @@
+---
+// About: identity only. Everything here must be traceable to something the
+// user actually provided. Empty fields are hidden, never filled in.
+import Base from '../layouts/Base.astro';
+import CtaBand from '../components/CtaBand.astro';
+import { SITE } from '../config/site';
+import { publicClaims } from '../data/claims';
+
+const claims = publicClaims();
+const title = SITE.name ? `About | ${SITE.name}` : 'About';
+const description = SITE.name
+  ? `${SITE.legalName || SITE.name}${SITE.city ? `, based in ${SITE.city}` : ''}. What we supply and how to reach us.`
+  : 'Company information.';
+const location = [SITE.city, SITE.country].filter(Boolean).join(', ');
+---
+
+<Base title={title} description={description}>
+  <section>
+    <div class="wrap article">
+      <h1>About {SITE.name || 'the company'}</h1>
+
+      {
+        SITE.legalName && SITE.legalName !== SITE.name && (
+          <p class="article-meta">Registered name: {SITE.legalName}</p>
+        )
+      }
+
+      {
+        location && (
+          <p>
+            Based in {location}
+            {SITE.address ? `. ${SITE.address}` : '.'}
+          </p>
+        )
+      }
+
+      {
+        SITE.category && (
+          <p>
+            We supply {SITE.category}
+            {SITE.buyers.length ? ` to ${SITE.buyers.join(', ')}` : ''}.
+          </p>
+        )
+      }
+
+      {
+        claims.length > 0 && (
+          <>
+            <h2>What we can do</h2>
+            <ul>
+              {claims.map((c) => (
+                <li>
+                  {c.statement}
+                  {c.state === 'capability' && (
+                    <span class="form-note"> — exact terms confirmed with your order</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </>
+        )
+      }
+
+      {
+        SITE.markets.length > 0 && (
+          <>
+            <h2>Markets served</h2>
+            <ul>
+              {SITE.markets.map((m) => <li>{m}</li>)}
+            </ul>
+          </>
+        )
+      }
+
+      <h2>Contact</h2>
+      <ul>
+        {SITE.email && <li>Email: <a href={`mailto:${SITE.email}`}>{SITE.email}</a></li>}
+        {SITE.phone && <li>Tel: {SITE.phone}</li>}
+        {
+          SITE.altContactLabel && SITE.altContactHref && (
+            <li><a href={SITE.altContactHref} rel="noopener">{SITE.altContactLabel}</a></li>
+          )
+        }
+      </ul>
+
+      <p class="form-note">
+        We do not publish certifications, customer lists, capacity figures or company
+        history that we cannot evidence. If you need any of those for supplier
+        approval, ask and we will provide what exists.
+      </p>
+    </div>
+  </section>
+
+  <CtaBand />
+</Base>

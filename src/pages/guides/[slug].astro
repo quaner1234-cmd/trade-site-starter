@@ -1,0 +1,42 @@
+---
+// One page per buyer question, generated from src/data/knowledge.ts.
+// Articles with no recorded source are never routed (publishableArticles).
+import Base from '../../layouts/Base.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import { publishableArticles } from '../../data/knowledge';
+import { SITE } from '../../config/site';
+
+export function getStaticPaths() {
+  return publishableArticles().map((article) => ({
+    params: { slug: article.slug },
+    props: { article },
+  }));
+}
+
+const { article } = Astro.props;
+---
+
+<Base title={article.title} description={article.description}>
+  <article class="wrap article">
+    <h1>{article.question}</h1>
+    <p class="article-meta">
+      {article.evidence === 'practice'
+        ? 'Industry practice — general guidance, not a claim about this company.'
+        : 'Company information.'}
+    </p>
+
+    {article.body.map((p) => <p>{p}</p>)}
+
+    <h2>Sources</h2>
+    <ul>
+      {article.sources.map((s) => (
+        <li><a href={s.url} rel="noopener nofollow">{s.label}</a></li>
+      ))}
+    </ul>
+
+    <h2>Next step</h2>
+    <p>{article.nextStep}</p>
+  </article>
+
+  <CtaBand heading="Have a specific question?" body={SITE.email ? `Email ${SITE.email} or use the form below.` : undefined} />
+</Base>

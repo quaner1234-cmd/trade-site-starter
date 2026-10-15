@@ -1,0 +1,118 @@
+---
+// Base layout: <head> SEO/OG/JSON-LD, header, footer.
+// Every page passes title + description; canonical is derived from the route.
+import { SITE } from '../config/site';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Overrides the derived canonical when a page needs it. */
+  canonical?: string;
+  ogImage?: string;
+}
+
+const { title, description, canonical, ogImage } = Astro.props;
+
+const path = canonical ?? Astro.url.pathname.replace(/index\.html$/, '');
+const canonicalUrl = new URL(path, SITE.url).href;
+// Append the company name only when the page title does not already carry it —
+// "Product | Acme | Acme" is a common and avoidable SEO defect.
+const alreadyHasName = Boolean(SITE.name) && title.includes(SITE.name);
+const fullTitle =
+  !SITE.name || title === SITE.name || alreadyHasName
+    ? title
+    : `${title} | ${SITE.name}`;
+const og = ogImage ? new URL(ogImage, SITE.url).href : undefined;
+
+// Organization JSON-LD is emitted only once the company is identified.
+// Empty fields are omitted rather than sent as empty strings.
+const orgName = SITE.legalName || SITE.name;
+const organization = orgName
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: orgName,
+      url: SITE.url,
+      ...(SITE.email ? { email: SITE.email } : {}),
+      ...(SITE.city || SITE.country
+        ? {
+            address: {
+              '@type': 'PostalAddress',
+              ...(SITE.city ? { addressLocality: SITE.city } : {}),
+              ...(SITE.country ? { addressCountry: SITE.country } : {}),
+            },
+          }
+        : {}),
+    }
+  : null;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    {og && <meta property="og:image" content={og} />}
+    <meta name="twitter:card" content="summary_large_image" />
+
+    {organization && (
+      <script type="application/ld+json" set:html={JSON.stringify(organization)} />
+    )}
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="wrap header-inner">
+        <a class="brand" href="/">{SITE.name || 'Company'}</a>
+        <nav class="nav" aria-label="Main">
+          <a href="/products/">Products</a>
+          <a href="/about/">About</a>
+          <a href="/guides/">Guides</a>
+          <a class="btn btn-primary btn-sm" href="/contact/">Request a Quote</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-inner">
+        <div>
+          <p class="footer-brand">{SITE.legalName || SITE.name}</p>
+          {SITE.address && <p>{SITE.address}</p>}
+        </div>
+        <div class="footer-contact">
+          {SITE.email && (
+            <p>
+              Email: <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
+            </p>
+          )}
+          {SITE.phone && <p>Tel: {SITE.phone}</p>}
+          {SITE.altContactLabel && SITE.altContactHref && (
+            <p>
+              <a href={SITE.altContactHref} rel="noopener">{SITE.altContactLabel}</a>
+            </p>
+          )}
+        </div>
+      </div>
+      <div class="wrap footer-note">
+        <p>
+          Product specifications are confirmed per inquiry. Nothing on this site is a
+          contractual offer.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

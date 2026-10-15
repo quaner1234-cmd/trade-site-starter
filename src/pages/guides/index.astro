@@ -1,0 +1,39 @@
+---
+import Base from '../../layouts/Base.astro';
+import { publishableArticles } from '../../data/knowledge';
+import { SITE } from '../../config/site';
+
+const articles = publishableArticles();
+const title = SITE.name ? `Buyer guides | ${SITE.name}` : 'Buyer guides';
+const description =
+  'Practical answers to the questions overseas buyers ask before placing an order.';
+---
+
+<Base title={title} description={description}>
+  <section>
+    <div class="wrap">
+      <h1>Buyer guides</h1>
+      <p class="lead">
+        Answers to the questions buyers ask before ordering. Each article covers one
+        question and names its sources.
+      </p>
+      {
+        articles.length === 0 ? (
+          <p class="form-note">
+            No guides published yet. An article is only published once its sources are
+            recorded in <code>src/data/knowledge.ts</code>.
+          </p>
+        ) : (
+          <ul class="cards">
+            {articles.map((a) => (
+              <li class="card">
+                <h3><a href={`/guides/${a.slug}/`}>{a.question}</a></h3>
+                <p>{a.description}</p>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </div>
+  </section>
+</Base>

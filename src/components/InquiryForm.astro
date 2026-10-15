@@ -1,0 +1,188 @@
+---
+// Inquiry form. Degrades safely in three stages:
+//   1. POST to SITE.rfqEndpoint (Formspree free tier) when configured
+//   2. mailto: with a structured summary when an email exists
+//   3. copy the summary to the clipboard so nothing is lost
+// An inquiry that silently disappears is the worst failure this site can have.
+import { SITE } from '../config/site';
+
+interface Field {
+  name: string;
+  label: string;
+  type: 'text' | 'email' | 'select' | 'textarea';
+  required?: boolean;
+  hint?: string;
+  options?: string[];
+  full?: boolean;
+}
+
+// Fields are generic on purpose: they work for any export business. The Agent
+// may add industry-specific optional fields, but must keep required fields to
+// the minimum a buyer will actually fill in.
+const fields: Field[] = [
+  { name: 'name', label: 'Your name', type: 'text', required: true },
+  { name: 'email', label: 'Email', type: 'email', required: true },
+  { name: 'company', label: 'Company', type: 'text', hint: '(optional)' },
+  { name: 'country', label: 'Country', type: 'text', required: true },
+  {
+    name: 'buyerType',
+    label: 'What kind of buyer are you?',
+    type: 'select',
+    options: [
+      'Distributor / wholesaler',
+      'Contractor / installer',
+      'Brand owner / private label',
+      'Manufacturer / fabricator',
+      'Other',
+    ],
+  },
+  { name: 'quantity', label: 'Approximate quantity', type: 'text', hint: '(an estimate is fine)' },
+  {
+    name: 'message',
+    label: 'What do you need?',
+    type: 'textarea',
+    required: true,
+    hint: 'specification, application, target price, timing — anything helps',
+    full: true,
+  },
+];
+---
+
+<form
+  class="form"
+  id="inquiry-form"
+  novalidate
+  data-endpoint={SITE.rfqEndpoint || undefined}
+  data-email={SITE.email || undefined}
+>
+  {
+    fields.map((f) => (
+      <div class:list={['field', { full: f.full }]}>
+        <label for={`inq-${f.name}`}>
+          {f.label}
+          {f.required && <span class="req"> *</span>}
+          {f.hint && <span class="form-hint"> {f.hint}</span>}
+        </label>
+        {f.type === 'textarea' && (
+          <textarea id={`inq-${f.name}`} name={f.name} required={f.required} />
+        )}
+        {f.type === 'select' && (
+          <select id={`inq-${f.name}`} name={f.name} required={f.required}>
+            {f.options?.map((o) => <option>{o}</option>)}
+          </select>
+        )}
+        {(f.type === 'text' || f.type === 'email') && (
+          <input
+            id={`inq-${f.name}`}
+            name={f.name}
+            type={f.type}
+            required={f.required}
+            autocomplete={f.name === 'email' ? 'email' : f.name === 'name' ? 'name' : undefined}
+          />
+        )}
+      </div>
+    ))
+  }
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">Send Inquiry</button>
+    <p class="form-note">
+      {SITE.responseCommitment
+        ? `We reply ${SITE.responseCommitment}.`
+        : 'We reply by email with a quotation or the questions we still need answered.'}
+    </p>
+  </div>
+</form>
+
+<p class="form-note" id="inquiry-result" hidden style="white-space: pre-line;"></p>
+
+{
+  (!SITE.rfqEndpoint && !SITE.email) && (
+    <p class="form-note">
+      <strong>Not ready to publish:</strong> no inquiry endpoint or contact email is
+      configured. See <code>FACTS_TO_CONFIRM.md</code>.
+    </p>
+  )
+}
+
+<script>
+  const form = document.getElementById('inquiry-form') as HTMLFormElement | null;
+  const result = document.getElementById('inquiry-result');
+
+  function summary(f: HTMLFormElement): string {
+    const data = new FormData(f);
+    return [...data.entries()]
+      .map(([k, v]) => [k, String(v ?? '').trim()])
+      .filter(([, v]) => v)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join('\n');
+  }
+
+  function validate(f: HTMLFormElement): boolean {
+    let ok = true;
+    for (const el of f.querySelectorAll<HTMLInputElement>('[required]')) {
+      if (!el.value.trim()) {
+        el.setAttribute('aria-invalid', 'true');
+        el.style.borderColor = '#8b4513';
+        ok = false;
+      } else {
+        el.removeAttribute('aria-invalid');
+        el.style.borderColor = '';
+      }
+    }
+    return ok;
+  }
+
+  function note(text: string) {
+    if (result) {
+      result.hidden = false;
+      result.textContent = text;
+    }
+  }
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!validate(form)) return;
+
+    const endpoint = form.dataset.endpoint;
+    const email = form.dataset.email;
+    const text = summary(form);
+
+    if (endpoint) {
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify(Object.fromEntries(new FormData(form).entries())),
+        });
+        if (!res.ok) throw new Error(String(res.status));
+        form.reset();
+        note('Thank you — your inquiry has been sent. We will reply by email.');
+        return;
+      } catch {
+        /* fall through to mailto */
+      }
+    }
+
+    if (email) {
+      const subject = 'Inquiry from website';
+      window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+      note('Your email client should open with the inquiry filled in. If it does not, email us directly.');
+      return;
+    }
+
+    let copied = false;
+    if (navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(text);
+        copied = true;
+      } catch {
+        /* clipboard unavailable */
+      }
+    }
+    note(
+      copied
+        ? 'No inquiry channel is configured yet — your details have been copied. Paste them into an email to the company.'
+        : text,
+    );
+  });
+</script>

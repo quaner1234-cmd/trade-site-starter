@@ -1,0 +1,21 @@
+{
+  // CHANGE THIS before you deploy. The Worker name becomes
+  // https://<name>.<your-subdomain>.workers.dev and must be unique in your
+  // Cloudflare account. If you leave the default, your first deploy may
+  // overwrite an existing Worker that happens to share the name.
+  "name": "trade-site-starter",
+  "compatibility_date": "2026-10-15",
+
+  // Static-only deployment: Astro's build output is served as Workers Assets.
+  // No Worker script, no Durable Objects, no paid plan needed.
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page"
+  },
+
+  // Never put a token, account id or secret in this file. CI reads them from
+  // GitHub Actions secrets; local deploys use `npx wrangler login`.
+  "observability": {
+    "enabled": false
+  }
+}

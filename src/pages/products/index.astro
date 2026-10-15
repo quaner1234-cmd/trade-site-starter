@@ -1,0 +1,37 @@
+---
+import Base from '../../layouts/Base.astro';
+import { PRODUCTS } from '../../data/products';
+import { SITE } from '../../config/site';
+
+const title = SITE.name ? `Products | ${SITE.name}` : 'Products';
+const description = SITE.category
+  ? `Product range supplied by ${SITE.name}: ${SITE.category}. Specifications confirmed per inquiry.`
+  : 'Product range. Specifications are confirmed per inquiry.';
+---
+
+<Base title={title} description={description}>
+  <section>
+    <div class="wrap">
+      <h1>Products</h1>
+      <p class="lead">
+        {
+          SITE.category
+            ? `${SITE.name} supplies ${SITE.category}. Each family below lists what is confirmed; anything not confirmed is stated as per-inquiry rather than filled with a guess.`
+            : 'Each family lists what is confirmed; anything not confirmed is stated as per-inquiry rather than filled with a guess.'
+        }
+      </p>
+
+      <ul class="cards">
+        {
+          PRODUCTS.map((p) => (
+            <li class="card">
+              {p.image && <img src={p.image} alt={p.imageAlt ?? p.name} loading="lazy" />}
+              <h3><a href={`/products/${p.slug}/`}>{p.name}</a></h3>
+              <p>{p.summary}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+</Base>

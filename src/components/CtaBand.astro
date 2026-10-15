@@ -1,0 +1,27 @@
+---
+// Closing call-to-action used at the bottom of every page.
+// A buyer should never reach the end of a page without a next step.
+import { SITE } from '../config/site';
+
+interface Props {
+  heading?: string;
+  body?: string;
+}
+const { heading = 'Ready to discuss your requirement?', body } = Astro.props;
+---
+
+<section class="section-alt">
+  <div class="wrap">
+    <h2>{heading}</h2>
+    <p>
+      {body ??
+        'Send the specification, quantity and destination. We reply with what we can supply, or with the questions we still need answered.'}
+    </p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/contact/">Request a Quote</a>
+      {SITE.email && (
+        <a class="btn btn-secondary" href={`mailto:${SITE.email}`}>Email us directly</a>
+      )}
+    </div>
+  </div>
+</section>

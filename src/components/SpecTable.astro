@@ -1,0 +1,45 @@
+---
+// Renders a product's spec table. Only rows with real evidence appear; a
+// missing row is normal and is never filled with a plausible guess.
+import type { Product } from '../data/products';
+import { visibleSpecs } from '../data/products';
+
+interface Props {
+  product: Product;
+}
+const { product } = Astro.props;
+const specs = visibleSpecs(product);
+---
+
+{
+  specs.length > 0 ? (
+    <table>
+      <caption class="form-note" style="text-align:left; margin-bottom:8px;">
+        Specifications for {product.name}. Values marked “per inquiry” are confirmed
+        with your order.
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Property</th>
+          <th scope="col">Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        {specs.map((s) => (
+          <tr>
+            <th scope="row">{s.label}</th>
+            <td>
+              {s.value}
+              {s.evidence === 'range' && <span class="form-note"> — typical range; confirmed per inquiry</span>}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  ) : (
+    <p class="form-note">
+      Specifications for this product are confirmed per inquiry — send us the
+      requirement and we will answer with the exact values we can supply.
+    </p>
+  )
+}

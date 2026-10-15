@@ -1,0 +1,28 @@
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.astro/
+.wrangler/
+
+# Environment and secrets — never commit these
+.env
+.env.*
+.dev.vars
+.dev.vars.*
+!.env.example
+
+# Local tooling
+.DS_Store
+Thumbs.db
+
+# Intake material may contain private company documents and customer data.
+# It is excluded by default. Add `!intake/` if you deliberately want company
+# material in the repository — and check it for customer names and prices first.
+intake/

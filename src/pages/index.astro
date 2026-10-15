@@ -1,0 +1,75 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../config/site';
+import { PRODUCTS } from '../data/products';
+import { publicClaims } from '../data/claims';
+import CtaBand from '../components/CtaBand.astro';
+
+const category = SITE.category || 'products';
+const buyers = SITE.buyers.length ? SITE.buyers.join(', ') : '';
+
+const title = SITE.name
+  ? `${SITE.category ? SITE.category.charAt(0).toUpperCase() + SITE.category.slice(1) : 'Products'} supplier — ${SITE.name}`
+  : 'Export B2B website starter';
+const description = SITE.category
+  ? `${SITE.name} supplies ${SITE.category}${buyers ? ` for ${buyers}` : ''}. Specifications, applications and how to request a quotation.`
+  : 'Starter template. Fill in src/config/site.ts with your company facts before publishing.';
+---
+
+<Base title={title} description={description}>
+  <section class="hero">
+    <div class="wrap">
+      <h1>
+        {
+          SITE.category
+            ? `${SITE.category.charAt(0).toUpperCase() + SITE.category.slice(1)} for ${buyers || 'wholesale buyers'}`
+            : 'Your export business, stated plainly'
+        }
+      </h1>
+      <p class="lead">
+        {
+          SITE.name
+            ? `${SITE.name} supplies ${category} to overseas buyers. Specifications are confirmed per inquiry — nothing here is a guess.`
+            : 'This is the trade-site-starter template. Fill in src/config/site.ts and src/data/ with your real company facts, then rebuild.'
+        }
+      </p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="/contact/">Request a Quote</a>
+        <a class="btn btn-secondary" href="/products/">View Products</a>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Products</h2>
+      <ul class="cards">
+        {
+          PRODUCTS.map((p) => (
+            <li class="card">
+              <h3><a href={`/products/${p.slug}/`}>{p.name}</a></h3>
+              <p>{p.summary}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  {
+    publicClaims().length > 0 && (
+      <section class="section-alt">
+        <div class="wrap">
+          <h2>Working with us</h2>
+          <ul>
+            {publicClaims().map((c) => (
+              <li>{c.statement}</li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  <CtaBand />
+</Base>

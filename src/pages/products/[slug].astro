@@ -1,0 +1,53 @@
+---
+// One page per product family, generated from src/data/products.ts.
+import Base from '../../layouts/Base.astro';
+import SpecTable from '../../components/SpecTable.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import { PRODUCTS } from '../../data/products';
+import { SITE } from '../../config/site';
+
+export function getStaticPaths() {
+  return PRODUCTS.map((product) => ({
+    params: { slug: product.slug },
+    props: { product },
+  }));
+}
+
+const { product } = Astro.props;
+const title = `${product.name}${SITE.name ? ` | ${SITE.name}` : ''}`;
+const description = product.summary.slice(0, 155);
+---
+
+<Base title={title} description={description}>
+  <article class="wrap article">
+    <h1>{product.name}</h1>
+    <p class="lead">{product.summary}</p>
+
+    {product.image && (
+      <img src={product.image} alt={product.imageAlt ?? product.name} loading="lazy" />
+    )}
+
+    <h2>Specification</h2>
+    <SpecTable product={product} />
+
+    {
+      product.applications.length > 0 && (
+        <>
+          <h2>Applications</h2>
+          <ul>
+            {product.applications.map((a) => <li>{a}</li>)}
+          </ul>
+        </>
+      )
+    }
+
+    <h2>How to order</h2>
+    <p>
+      Send the specification, quantity and destination port. We confirm what we can
+      supply and the lead time against your actual requirement — published figures
+      would be guesses, so we do not publish them.
+    </p>
+  </article>
+
+  <CtaBand heading={`Interested in ${product.name}?`} />
+</Base>

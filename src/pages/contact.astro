@@ -1,0 +1,33 @@
+---
+// The conversion page. Every other page should reach this in one click.
+import Base from '../layouts/Base.astro';
+import InquiryForm from '../components/InquiryForm.astro';
+import { SITE } from '../config/site';
+
+const title = SITE.name ? `Request a quote | ${SITE.name}` : 'Request a quote';
+const description = SITE.category
+  ? `Send your ${SITE.category} requirement — specification, quantity and destination — and we will reply with what we can supply.`
+  : 'Send your requirement and we will reply with what we can supply.';
+---
+
+<Base title={title} description={description}>
+  <section>
+    <div class="wrap">
+      <h1>Request a quote</h1>
+      <p class="lead">
+        Tell us what you need. Approximate answers are fine — we will come back with
+        what we can supply and the questions we still need answered.
+      </p>
+
+      <InquiryForm />
+
+      {
+        SITE.email && (
+          <p class="form-note" style="margin-top:24px;">
+            Prefer email? Write to <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.
+          </p>
+        )
+      }
+    </div>
+  </section>
+</Base>
