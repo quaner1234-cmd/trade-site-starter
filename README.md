@@ -111,9 +111,11 @@ these gates.** That is the point: an empty template must not be publishable.
 Push to `main` and GitHub Actions deploys to Cloudflare Workers static assets.
 Other branches get preview deployments.
 
-**Before your first deploy, rename the Worker** in `wrangler.jsonc`. The `name`
-field becomes `https://<name>.<your-subdomain>.workers.dev`; leaving the default
-can overwrite an existing Worker in your account.
+**Before the first deploy, rename the Worker** in `wrangler.jsonc`. The
+GitHub Actions workflow derives both production and `-preview` Worker names
+from this single value; the default is rejected. Also set the Actions variable
+`PUBLIC_SITE_URL` to your actual HTTPS origin (`*.workers.dev` works before
+a domain purchase); `example.com` canonicals are blocked.
 
 Full step-by-step setup — Cloudflare account, domain, DNS, Formspree, Google
 Search Console — is in **[DEPLOY.md](DEPLOY.md)**. It names every step that
