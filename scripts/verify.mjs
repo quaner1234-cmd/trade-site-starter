@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const dist = join(root, 'dist');
-const siteUrl = (process.env.PUBLIC_SITE_URL || 'https://example.com').replace(/\/$/, '');
+const siteUrl = (process.env.PUBLIC_SITE_URL || process.env.SITE_URL || 'https://example.com').replace(/\/$/, '');
 
 if (!existsSync(dist)) {
   console.error('dist/ not found — run `npm run build` first.');
@@ -29,6 +29,19 @@ if (!existsSync(dist)) {
 }
 
 const problems = [];
+// A preview may point its canonical to production, but no configured
+// business may ship canonical URLs on an example or local placeholder host.
+try {
+  const origin = new URL(siteUrl);
+  if (origin.protocol !== 'https:' ||
+      /^(?:www\.)?example\.(?:com|org|net)$/.test(origin.hostname) ||
+      /(?:^|\.)example$/.test(origin.hostname) ||
+      origin.hostname === 'localhost') {
+    problems.push(`UNCONFIGURED SITE URL: set PUBLIC_SITE_URL to your actual https:// domain or workers.dev origin (got ${siteUrl})`);
+  }
+} catch {
+  problems.push(`INVALID SITE URL: ${siteUrl}`);
+}
 const pages = [];
 const searchable = [];
 
@@ -241,6 +254,8 @@ const filled = (key) => {
   return m ? m[1].trim() : '';
 };
 if (!filled('name')) problems.push('SITE.name is empty — the site has no identity');
+if (!filled('category')) problems.push('SITE.category is empty — buyer-facing positioning is missing');
+if (!filled('country')) problems.push('SITE.country is empty — business location is unverified');
 if (!filled('email') && !filled('rfqEndpoint'))
   problems.push('SITE.email and SITE.rfqEndpoint are both empty');
 
