@@ -73,7 +73,6 @@ const required = [
   // Email OR endpoint satisfies the inquiry channel — see the shared rule in
   // src/config/site.ts (hasInquiryChannel). Each is listed separately so the
   // report can say which one is present, but only "neither" is blocking.
-  ['email', 'public inbox for inquiries (enough on its own)'],
   ['category', 'what you sell, in the buyer’s own words'],
   ['country', 'ISO country code, e.g. CN'],
 ];
@@ -85,7 +84,7 @@ const optional = [
   ['responseCommitment', 'reply time you will actually honour'],
 ];
 
-console.log('Required facts (site cannot publish without these):');
+console.log('Required company facts (site cannot publish without these):');
 let blockers = 0;
 for (const [key, label] of required) {
   const ok = Boolean(filled(key));
@@ -97,6 +96,7 @@ for (const [key, label] of required) {
 // hasInquiryChannel() in src/config/site.ts and the check in verify.mjs.
 const hasEmail = Boolean(filled('email'));
 const hasEndpoint = Boolean(filled('rfqEndpoint'));
+console.log('\nInquiry channel (email OR Formspree endpoint is required):');
 console.log(
   `  ${hasEmail || hasEndpoint ? '[x]' : '[ ]'} ${'inquiry'.padEnd(14)} ` +
     (hasEmail
