@@ -12,7 +12,7 @@
 
 // Canonical origin. PUBLIC_SITE_URL overrides it so preview builds keep
 // pointing at production and are never indexed as duplicates.
-const url = import.meta.env.PUBLIC_SITE_URL || 'https://example.com';
+const url = import.meta.env.PUBLIC_SITE_URL || import.meta.env.SITE_URL || 'https://example.com';
 
 export const SITE = {
   // --- identity: the site cannot publish without these ----------------------
@@ -57,7 +57,7 @@ export const SITE = {
  * without changing them produces contradictory advice.
  */
 export function publishReady(): boolean {
-  return Boolean(SITE.name && SITE.email);
+  return Boolean(SITE.name && SITE.category && SITE.country && hasInquiryChannel());
 }
 
 /** True when at least one inquiry channel is configured. */
