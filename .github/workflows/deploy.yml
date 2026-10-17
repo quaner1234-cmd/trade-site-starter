@@ -1,8 +1,8 @@
 # Continuous deployment → Cloudflare Workers (static assets, free tier)
 #
 # ISOLATION: production and previews are SEPARATE WORKERS.
-#   default branch → Worker  $WORKER_NAME          (serves the custom domain)
-#   other refs     → Worker  $WORKER_NAME-preview  (preview host only)
+#   default branch → Worker  <wrangler.jsonc name>          (production)
+#   other refs     → Worker  <wrangler.jsonc name>-preview  (preview only)
 #
 # Two Workers, not one Worker with two branches. A Worker has a single live
 # version, so deploying a preview branch into the production Worker would
@@ -28,10 +28,6 @@ concurrency:
 
 permissions:
   contents: read
-
-env:
-  # Production Worker name. Keep in sync with wrangler.jsonc.
-  WORKER_NAME: trade-site-starter
 
 jobs:
   deploy:
@@ -71,6 +67,8 @@ jobs:
         if: steps.cfg.outputs.configured == 'true'
         id: target
         run: |
+          # Wrangler's name is the single source for production and preview.
+          WORKER_NAME=$(node scripts/worker-name.mjs)
           if [ "${{ github.event_name }}" != "pull_request" ] \
              && [ "${{ github.ref }}" = "refs/heads/${{ github.event.repository.default_branch }}" ]; then
             echo "worker=${WORKER_NAME}" >> "$GITHUB_OUTPUT"
