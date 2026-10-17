@@ -145,9 +145,11 @@ All three checks (`build`, `verify`, `seo`) also run in CI and gate the deploy.
 `main` → production Worker; every other branch and PR → a **separate**
 `-preview` Worker, so a preview can never overwrite production.
 
-Rename the Worker before the first deploy: `wrangler.jsonc` `name` becomes
-`https://<name>.<subdomain>.workers.dev`, and a stale default can overwrite an
-existing Worker with the same name in the account.
+Rename the Worker before the first deploy: `wrangler.jsonc` `name` is the
+single source for production and `-preview` Worker names in GitHub Actions.
+`node scripts/worker-name.mjs` blocks the default name. Set the GitHub Actions
+variable `PUBLIC_SITE_URL` to the actual HTTPS site origin (the Workers URL
+is fine before buying a domain). An `example.com` canonical blocks release.
 
 A fresh Worker can 404 for ~20–30 seconds after a successful deploy while the
 edge propagates. Re-check before concluding an asset is missing.
@@ -181,12 +183,13 @@ promise a ranking outcome.
 
 ## 11. Style of the site
 
-Clean, technical, industrial, restrained. One border treatment, one accent
-(`#1b365d`), no shadows, no gradients, no decorative rules. Product photography
-carries the page.
-
-Not a SaaS landing page. Not an Alibaba template. No "Quality First, Best
-Service, Competitive Price".
+Design for the business, buyer and brand — never force a single industrial
+palette on all industries. Technical products may benefit from restrained
+layouts; fashion, gifts, consumer goods and services may need different
+visual hierarchies. Choose accessible colours, appropriate typography and
+real product photography; ensure mobile usability and clear calls to action.
+Avoid generic SaaS/Alibaba layouts and filler such as "Quality First, Best
+Service, Competitive Price". Do not invent evidence through imagery.
 
 A buyer should be able to answer, in 30–90 seconds: *is this what I buy, is it
 for someone like me, and what do I do next?*
