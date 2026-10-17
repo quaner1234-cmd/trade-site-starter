@@ -36,8 +36,9 @@ That produces `https://<worker-name>.<your-subdomain>.workers.dev`.
 
 ### Production and previews are separate Workers
 
-`main` deploys to `$WORKER_NAME`; every other branch and PR deploys to
-`$WORKER_NAME-preview`. **Verified by deploying the same build to both**: the
+`main` deploys to `wrangler.jsonc`'s `name`; other branches and PRs deploy to
+`<name>-preview`. Both are derived from a single config field; the default
+starter name is rejected. **Verified by deploying the same build to both**: the
 preview Worker came up on its own hostname while the production Worker kept
 serving its existing content unchanged.
 
@@ -78,8 +79,14 @@ Repo → Settings → Secrets and variables → Actions → New repository secre
 | `CLOUDFLARE_API_TOKEN` | the token from step 2 |
 | `CLOUDFLARE_ACCOUNT_ID` | the account ID from step 2 |
 
-After this, **every push to `main` deploys to production**; every other branch
-and every PR gets a preview URL. The workflow runs `npm ci` → `npm run build` →
+Add an Actions **repository variable**, `PUBLIC_SITE_URL`, containing the real
+HTTPS origin (`https://my-worker.my-subdomain.workers.dev` is fine before
+purchasing a domain). Do not leave this unset or use `example.com` — the SEO
+verification rejects placeholder canonicals.
+
+After this, **every configured push to `main` deploys to production**; other
+branches and same-repository PRs get a preview Worker. An empty starter skips
+the pipeline by design. The workflow runs `npm ci` → `npm run build` →
 `npm run verify` → `wrangler deploy`, so a commit that breaks a link, a
 canonical or the sitemap **cannot reach production**.
 
@@ -105,8 +112,9 @@ everything end-to-end before spending money on a domain.
    domain is on Cloudflare DNS. If your DNS is elsewhere, add the CNAME it
    shows you.
 4. Set the canonical origin so sitemap and canonical tags use the real domain:
-   - locally/CI: `PUBLIC_SITE_URL=https://yourdomain.com npm run build`
-   - or edit the fallback in `astro.config.mjs`.
+   - locally: `PUBLIC_SITE_URL=https://yourdomain.com npm run build`
+   - CI: change the repository Actions variable `PUBLIC_SITE_URL` and redeploy.
+   - Do not change the placeholder fallback to bypass verification.
 
 ---
 
@@ -164,8 +172,9 @@ the buyer's spam folder.
 
 - [ ] `npm run build` + `npm run verify` pass with zero problems
 - [ ] Worker renamed in `wrangler.jsonc`
-- [ ] `SITE.name`, `SITE.email`, `SITE.category`, `SITE.country` filled
-- [ ] Formspree endpoint set
+- [ ] `SITE.name`, `SITE.category`, `SITE.country` filled
+- [ ] `SITE.email` **or** `SITE.rfqEndpoint` configured
+- [ ] `PUBLIC_SITE_URL` set to the real HTTPS origin (not `example.com`)
 - [ ] **Test inquiry submitted through the LIVE site and received**
 - [ ] Site checked on a phone (375px) and desktop
 - [ ] Custom domain resolves over HTTPS
@@ -177,7 +186,10 @@ the buyer's spam folder.
 ## Manual deploy (fallback)
 
 ```bash
-npm run build && node scripts/verify.mjs
+PUBLIC_SITE_URL=https://my-worker.my-subdomain.workers.dev npm run build
+PUBLIC_SITE_URL=https://my-worker.my-subdomain.workers.dev npm run verify
+npm run seo
+node scripts/worker-name.mjs # confirms Worker was renamed
 npx wrangler login          # opens a browser, once
 npx wrangler deploy
 ```
